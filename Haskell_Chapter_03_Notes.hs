@@ -176,6 +176,61 @@ mult' :: Int -> (Int -> (Int -> Int))
 mult' x y z = x*y*z
 
 
+{-
+------------------Polymorphic Type------------------
+
+A type that contains one or more type variables is called polymorphic
+
+EX
+length :: [a] -> Int
+[a] -> Int is a polymorphic type 
+length is a polymorphic function
+
+
+------------------ Overloaded Types ------------------
+
+(*) :: Num a => a -> a -> a 
+negate :: Num a => a -> a 
+abs :: Num a => a -> a
+
+
+3 :: Num a => a 
+means that for any numeric type a, the value 3 has type a
+
+------------------ Basic classes ------------------
+
+class is a collection of types that support certain overloaded operations called methods
+
+
+Eq         = equality types
+class that compares values
+
+(==) :: a -> a -> Bool 
+(/=) :: a -> a -> Bool
+
+Ord        = ordered types
+includes instances of class eq but also those that can be ordered
+
+Show       = showable types
+Contains values that can be converted to string
+show :: a -> String
+
+Read       = readable types
+contains types whose values can be converted from strings to a type
+EX
+> read "123" :: Int 123
+
+
+Num        = numeric types
+
+
+Integral   = integral types
+
+
+Fractional = fractional types
+
+-}
+
 
 
 

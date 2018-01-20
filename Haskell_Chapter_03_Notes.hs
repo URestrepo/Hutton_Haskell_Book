@@ -199,7 +199,8 @@ means that for any numeric type a, the value 3 has type a
 
 ------------------ Basic classes ------------------
 
-class is a collection of types that support certain overloaded operations called methods
+class is a collection of types 
+that support certain overloaded operations called methods
 
 
 Eq         = equality types
@@ -209,7 +210,7 @@ class that compares values
 (/=) :: a -> a -> Bool
 
 Ord        = ordered types
-includes instances of class eq but also those that can be ordered
+includes instances of types of class eq but also those that can be ordered
 
 Show       = showable types
 Contains values that can be converted to string
@@ -218,16 +219,31 @@ show :: a -> String
 Read       = readable types
 contains types whose values can be converted from strings to a type
 EX
-> read "123" :: Int 123
-
+> read "123" :: Int 
+123
 
 Num        = numeric types
+class whose types include numeric values
 
+6 methods
+(+) :: a -> a -> a 
+(-) :: a -> a -> a 
+(*) :: a -> a -> a 
+negate :: a -> a 
+abs :: a -> a 
+signum :: a -> a
 
 Integral   = integral types
+contains types of class Num, but support
+integer division and integer remainder
 
+div :: a -> a -> a 
+mod :: a -> a -> a
 
 Fractional = fractional types
+class contains types that are instances of the numeric class Num, 
+but in addition whose values are non-integral, 
+and as such support the methods of fractional division and fractional reciprocation
 
 -}
 

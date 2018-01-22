@@ -174,7 +174,34 @@ using other library functions rather than using explicit recursion,
 and are generic functions rather than being specific to the type of lists.
 
 -}
-and :: [Bool] -> Bool
+-- a.
+and' :: [Bool] -> Bool
+and' [] = True
+and' (x:xs) | x == False = False
+           | otherwise = and' xs
+
+-- b.
+concat' :: [[a]] -> [a]
+concat' [] = []
+concat' [x] = x
+concat' (x:xs) = x ++ concat' xs 
+
+-- c.
+replicate' :: Int -> a -> [a]
+replicate' 0 _ = [] 
+replicate' n e = e : replicate' (n-1) e
+
+-- d
+(!!*) :: [a] -> Int -> a
+(x:xs) !!* n | n < 0 = error "negative index"
+             | n == 0 = x
+             | otherwise = xs !!* (n-1)
+
+--e.
+elem' :: Eq a => a -> [a] -> Bool
+elem' e [] = False
+elem' e (x:xs) | e == x = True 
+               | otherwise = elem' e xs
 
 {-
 7. Define a recursive function merge :: Ord a => [a] -> [a] -> [a] that
@@ -183,10 +210,19 @@ merges two sorted lists to give a single sorted list. For example:
 > merge [2,5,6] [1,3,4] 
 [1,2,3,4,5,6]
 
+
 Note: your definition should not use other functions 
 on sorted lists such as insert or isort, 
 but should be defined using explicit recursion.
 -}
+
+merge' :: Ord a => [a] -> [a] -> [a]
+merge' [] [] = []
+merge' xs [] = xs
+merge' [] ys = ys
+merge' (x:xs) (y:ys) | x <= y    = x : merge' xs (y:ys) 
+                     | otherwise = y : merge' (x:xs) ys
+
 
 {-
 8. Using merge, define a function msort :: Ord a => [a] -> [a] that
@@ -194,8 +230,18 @@ but should be defined using explicit recursion.
 implements merge sort, in which the empty list and singleton lists are already sorted, and any other list is sorted by merging together the two lists that result from sorting the two halves of the list separately.
 
 Hint: first define a function halve :: [a] -> ([a],[a]) that splits a list into two halves whose lengths differ by at most one.
+
 -}
 
+
+halve' :: [a] -> ([a], [a])
+halve' xs = (take ((length xs) `div` 2) xs, drop ((length xs) `div` 2) xs)
+
+msort' :: Ord a => [a] -> [a]
+msort' [] = []
+msort' [x] = [x]
+msort' xs = merge' (msort' l1) (msort' l2)
+            where (l1,l2) = halve' xs
 
 
 {-
@@ -207,6 +253,41 @@ b. take a given number of elements from the start of a list;
 
 c. select the last element of a non-empty list.
 -}
+
+-- Step 1: define the type
+-- Step 2: enumerate the cases
+-- Step 3: define the simple cases
+-- Step 4: define the other cases
+-- Step 5: generalize and simplify
+
+-- a.
+sum' :: Num a => [a] -> a
+sum' [] = 0
+sum' (x:xs) = x + sum' xs
+
+-- b.
+take' :: Int -> [a] -> [a]
+take' 0 _ = []
+take' _ [] = []
+take' n (x:xs) = x : take' (n-1) xs 
+
+-- c.
+last' :: [a] -> a
+last' [] = error "empty list"
+last' [x] = x
+last' (x:xs) = last' xs
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

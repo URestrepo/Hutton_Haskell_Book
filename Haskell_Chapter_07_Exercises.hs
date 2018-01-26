@@ -1,4 +1,5 @@
 import Data.List
+import Data.Char
 
 {-
 7.9 Exercises
@@ -169,9 +170,6 @@ chop8 bits = take 8 bits : chop8 (drop 8 bits)
 -}
 
 
-int2bin :: Int -> [Bit]
-int2bin 0 = []
-int2bin n = n `mod` 2 : int2bin (n `div` 2)
 
 
 unfold :: (a -> Bool) -> (a -> b) -> (a -> a) -> a -> [b]
@@ -183,9 +181,9 @@ int2bin' = unfold (== 0) (`mod` 2) (`div` 2)
 
 -- First we create a type Bit
 
-chop8 :: [Bit] -> [[Bit]]
-chop8 [] = [] 
-chop8 bits = take 8 bits : chop8 (drop 8 bits)
+-- chop8 :: [Bit] -> [[Bit]]
+-- chop8 [] = [] 
+-- chop8 bits = take 8 bits : chop8 (drop 8 bits)
 
 {-
 > chop8 [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
@@ -226,7 +224,198 @@ Hint: the library function error :: String -> a displays the
 given string as an error message and terminates the program; 
 the polymorphic result type ensures that error can be used in any context.
 
+
 -}
+
+
+int2bin :: Int -> [Bit]
+int2bin 0 = []
+int2bin n = n `mod` 2 : int2bin (n `div` 2)
+
+bin2int :: [Bit] -> Int 
+bin2int bits = sum [w*b | (w,b) <- zip weights bits] 
+                     where weights = iterate (*2) 1
+
+bin2int' :: [Bit] -> Int 
+bin2int' = foldr (\x y -> x + 2*y) 0
+
+make8 :: [Bit] -> [Bit] 
+make8 bits = take 8 (bits ++ repeat 0)
+
+-- encode :: String -> [Bit]
+-- encode = concat . map (make8 . int2bin . ord)
+
+encode :: String -> [Bit]
+encode = concat . map (make_parity . make8 . int2bin . ord)
+
+make_parity :: [Bit] -> [Bit]
+make_parity bits | (even . sum) bits = bits ++ [0]
+                 | otherwise = bits ++ [1]
+
+check_parity :: [Bit] -> Bool
+check_parity bits | bytecode_even == parity_value = True
+                  | otherwise = False
+                  where bytecode_even = (even . sum . take 8) bits
+                        parity_value = (even . last) bits
+
+chop8 :: [Bit] -> [[Bit]]
+chop8 [] = [] 
+chop8 bits | check_parity bits == False = error "Parity Error"
+           | otherwise = take 8 bits : chop8 (drop 9 bits)
+
+-- decode :: [Bit] -> String 
+-- decode = map (chr . bin2int) . chop8
+
+decode :: [Bit] -> String 
+decode = map (chr . bin2int) . chop8
+
+channel :: [Bit] -> [Bit] 
+channel = id
+
+transmit :: String -> String 
+transmit = decode . channel . encode
+
+
+{-
+
+8. Test your new string transmitter program from the previous exercise 
+using a faulty communication channel that forgets the first bit, which 
+can be modelled using the tail function on lists of bits.
+
+-}
+noisy_channel :: [Bit] -> [Bit]
+noisy_channel bits = tail bits
+
+-- Why did (noisy_channel  = tail) not work?
+
+noisy_transmit :: String -> String
+noisy_transmit = decode . noisy_channel . encode
+
+{-
+*Main> noisy_transmit "to"
+":*** Exception: Parity Error
+CallStack (from HasCallStack):
+  error, called at Haskell_Chapter_07_Exercises.hs:263:43 in main:Main
+*Main> transmit "to"
+"to"
+
+-}
+
+{-
+9. Define a function altMap :: (a -> b) -> (a -> b) -> [a] -> [b]
+that alternately applies its two argument functions to successive elements in a list, 
+in turn about order. 
+
+For example:
+> altMap (+10) (+100) [0,1,2,3,4] 
+[10,101,12,103,14]
+-}
+
+
+
+altMap :: (a -> b) -> (a -> b) -> [a] -> [b]
+altMap f g [] = []
+altMap f g [x] = [f x]
+altMap f g (x:y:xs) =  f x : g y : altMap f g xs
+
+{-
+Alternative solution using a comprehension.
+
+altMap' :: (a -> b) -> (a -> b) -> [a] -> [b]
+altMap' f g xs = [if even d then f c else g c | (c, d) <- zip xs [0..]]
+-}
+
+{-
+10. Using altMap, define a function luhn :: [Int] -> Bool that implements 
+the Luhn algorithm from the exercises in chapter 4 for bank card numbers of any length. 
+Test your new function using your own bank card.
+
+
+
+-}
+
+-- > luhn 1 7 8 4 True
+
+-- > luhn 4 7 8 3 False
+
+luhnDouble :: Int -> Int 
+luhnDouble x | 2*x > 9   = 2*x - 9
+             | otherwise = 2*x
+
+luhn :: [Int] -> Bool
+luhn ns = ((== 0) . (`mod` 10)) . sum . (altMap luhnDouble id) $ ns
+
+-- luhn :: [Int] -> [Int]
+-- luhn ns = (altMap luhnDouble id ns)
+
+{- 
+8. The Luhn algorithm is used to check bank card numbers 
+for simple errors such as mistyping a digit, and proceeds as follows:
+consider each digit as a separate number; moving left, 
+double every other number from the second last; 
+subtract 9 from each number that is now greater than 9; 
+add all the resulting numbers together; 
+if the total is divisible by 10, the card number is valid.
+
+Define a function luhnDouble :: Int -> Int 
+that doubles a digit and subtracts 9 if the result is greater than 9. For example:
+
+> luhnDouble 3 6
+
+> luhnDouble 6 3
+
+Using luhnDouble and the integer remainder function mod, define a function 
+luhn :: Int -> Int -> Int -> Int -> Bool that decides if a
+four-digit bank card number is valid. For example:
+
+> luhn 1 7 8 4 True
+
+> luhn 4 7 8 3 False
+
+In the exercises for chapter 7 we will consider a more general version of this 
+function that accepts card numbers of any length.
+-}
+
+-- luhnDouble :: Int -> Int 
+-- luhnDouble x | 2*x > 9   = 2*x - 9
+--              | otherwise = 2*x
+
+
+-- luhn' :: Int -> Int -> Int -> Int -> Bool
+-- luhn' a b c d | (luhnDouble a + b + luhnDouble c + d) `mod` 10 == 0 = True
+--               | otherwise                                           = False
+
+
+-- -- To make code more organized, one can use the where (which allows you to define values)
+
+-- luhn'' :: Int -> Int -> Int -> Int -> Bool
+-- luhn'' a b c d | total `mod` 10 == 0 = True
+--                | otherwise           = False
+--                  where total = luhnDouble a 
+--                              + b
+--                              + luhnDouble c 
+--                              + d
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

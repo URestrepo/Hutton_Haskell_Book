@@ -140,13 +140,6 @@ foldr' :: (a -> b -> b) -> b -> [a] -> b
 foldr' f v [] = v 
 foldr' f v (x:xs) = f x (foldr' f v xs)
 
-{-
--- Step 1: define the type
--- Step 2: enumerate the cases
--- Step 3: define the simple cases
--- Step 4: define the other cases
--- Step 5: generalize and simplify
--}
 
 
 
@@ -457,23 +450,42 @@ winner = snd . last . result
 -}
 
 
+{-
+Alternative vote
+-}
+
+
+ballots :: [[String]] 
+ballots = [["Red", "Green"],["Blue"], ["Green", "Red", "Blue"], 
+            ["Blue", "Green", "Red"], ["Green"]]
 
 
 
+rmempty :: Eq a => [[a]] -> [[a]] 
+rmempty = filter (/= [])
+
+elim :: Eq a => a -> [[a]] -> [[a]] 
+elim x = map (filter (/= x))
+
+rank :: Ord a => [[a]] -> [a] 
+rank = map snd . result . map head
+
+{-
+> rank ballots 
+["Red", "Blue", "Green"]
+-}
 
 
+winner' :: Ord a => [[a]] -> a 
+winner' bs = case rank (rmempty bs) of
+                  [c] -> c 
+                  (c:cs) -> winner' (elim c bs)
 
 
-
-
-
-
-
-
-
-
-
-
+{-
+> winner’ ballots 
+"Green"
+-}
 
 
 

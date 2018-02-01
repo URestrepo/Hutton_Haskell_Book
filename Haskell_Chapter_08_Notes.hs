@@ -100,7 +100,7 @@ stored in data structures, and
 used in patterns.
 
 -}
-data Move = North | South | East | West
+data Move = North | South | East | West deriving Show
 
 -- Now for functions
 move :: Move -> Pos -> Pos
@@ -260,36 +260,111 @@ Data types that are declared using data and "newtype" can also be recursive
 -}
 
 
-data Nat = Zero | Succ Nat
+data Nat = Zero | Succ Nat deriving Show
+
+nat2int :: Nat -> Int
+nat2int Zero = 0 
+nat2int (Succ n) = 1 + nat2int n
+
+int2nat :: Int -> Nat
+int2nat 0 = Zero
+int2nat n = Succ (int2nat (n-1))
+
+-- To add, use nat2int then convert back int2nat
+-- 
+
+add :: Nat -> Nat -> Nat
+add m n = int2nat (nat2int m + nat2int n)
+
+-- However can be written more efficiently using recursion
+add' :: Nat -> Nat -> Nat
+add' Zero n     = n
+add' (Succ m) n = Succ (add' m n)
+
+
+{-
+add' (Succ (Succ (Succ Zero))) (Succ (Succ (Succ Zero)))
+
+Succ (Succ (Succ (Succ (Succ (Succ Zero)))))
+
+idea is to use constructors from number until exhausted
+
+add (Succ (Succ Zero)) (Succ Zero)
+= { applying add }
+Succ (add (Succ Zero) (Succ Zero))
+= { applying add }
+Succ (Succ (add Zero (Succ Zero)))
+= { applying add }
+Succ (Succ (Succ Zero))
 
 
 
 
 
 
+-}
+
+
+data List' a = Nil | Cons a (List' a)
+
+
+len :: List' a -> Int
+len Nil = 0
+len (Cons _ xs) = 1 + len xs 
 
 
 
+data Tree a = Leaf a | Node (Tree a) a (Tree a) deriving Show
+
+t :: Tree Int 
+t = Node (Node (Leaf 1) 3 (Leaf 4)) 5 
+            (Node (Leaf 6) 7 (Leaf 9))
 
 
 
+occurs :: Eq a => a -> Tree a -> Bool
+occurs x (Leaf y)     = x == y
+occurs x (Node l y r) = x == y || occurs x l || occurs x r
+
+
+flatten :: Tree a -> [a]
+flatten (Leaf x) = [x]
+flatten (Node l x r) = flatten l ++ [x] ++ flatten r
+
+
+{-
+data Tree a = Leaf a | Node (Tree a) (Tree a) 
+
+data Tree a = Leaf | Node (Tree a) a (Tree a) 
+
+data Tree a b = Leaf a | Node (Tree a b) b (Tree a b) 
+
+data Tree a = Node a [Tree a]
+
+-}
 
 
 
+------------------ Class and Instance Declarations ------------------
+{-
+Class is a collection of types that support certain overloaded operations called methods
+
+Eq is a type of equality class
+
+-}
 
 
+class Eq a where
+      (==*), (/=*) :: a -> a -> Bool
+
+      x /=* y = not (x ==* y)
 
 
+{-
+Declaration above states that something to be instance of class Eq', it must support equality
+and inequality operators of a specified 
 
-
-
-
-
-
-
-
-
-
+-}
 
 
 

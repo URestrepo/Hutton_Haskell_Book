@@ -77,7 +77,7 @@ Completely new types, as opposed to a synonym for an existing type,
 can be declared by specifying values using the "data" mechanism of Haskell
 
 -}
-data Bool' = False | True
+data Bool' = False' | True'
 
 {-
   | means or
@@ -333,6 +333,18 @@ flatten (Node l x r) = flatten l ++ [x] ++ flatten r
 
 
 {-
+occurs 3 t
+= True
+
+occurs 9 t
+= True
+
+occurs 10 t
+= False
+
+
+Trees may be made differently depending on situation
+
 data Tree a = Leaf a | Node (Tree a) (Tree a) 
 
 data Tree a = Leaf | Node (Tree a) a (Tree a) 
@@ -354,7 +366,7 @@ Eq is a type of equality class
 -}
 
 
-class Eq a where
+class Eq' a where
       (==*), (/=*) :: a -> a -> Bool
 
       x /=* y = not (x ==* y)
@@ -362,9 +374,212 @@ class Eq a where
 
 {-
 Declaration above states that something to be instance of class Eq', it must support equality
-and inequality operators of a specified 
+and inequality operators of the specified types.
+
+Because default definition already has "/=" operator, declaring an instance only requires
+a definition for "=="
+
+Bool can be made into instance of Eq by
 
 -}
+
+instance Eq' Bool where
+   False ==* False = True
+   True  ==* True  = True
+   _     ==* _     = False
+
+{-
+Only types that are declared using data and newtype mechanisms can be made 
+into instances of classes. 
+
+Classes can be extended to form new classes
+
+For example Ord can be made as extention from Eq
+-}
+
+class Eq' a => Ord' a where
+      (<#), (<=#), (>#), (>=#) :: a -> a -> Bool
+      min, max             :: a -> a -> a
+
+
+      min x y | x <=# y    = x
+              | otherwise = y
+
+      max x y | x <=# y    = y
+              | otherwise = x
+
+
+instance Ord' Bool where
+   False <# True = True
+   _     <# _    = False
+
+   b <=# c = (b <# c) || (b == c)
+   b ># c  = c <# b
+   b >=# c = c <=# b
+
+
+------------------ Derived Instances ------------------
+
+{-
+It is useful when types are declared to be part of instances of other built-in classes
+This can be done using
+
+deriving
+
+
+ex
+-}
+-- Cannot get to work
+-- *******************
+-- data Bool'' = False' | True'
+                  -- deriving (Eq, Ord, Show, Read)
+
+
+{-
+Regardless of not being able to get to work, the results should look like
+
+> False == False 
+True
+
+> False < True 
+True
+
+> show False 
+"False"
+
+> read "False" :: Bool 
+False
+
+Note: use of "::" in the last example is required 
+to resolve the type of the result, 
+which in this case cannot be inferred from the context 
+in which the function is used
+
+
+Note reason why > False < True  == True is due 
+-}
+
+------------------ 8.6 Tautology checker ------------------
+{-
+
+
+-}
+data Prop = Const Bool
+          | Var Char
+          | Not Prop
+          | And Prop Prop
+          | Imply Prop Prop deriving Show
+
+p1 :: Prop
+p1 = And (Var 'A') (Not (Var 'A'))
+
+p2 :: Prop
+p2 = Imply (And (Var 'A') (Var 'B')) (Var 'A')
+
+p3 :: Prop
+p3 = Imply (Var 'A') (And (Var 'A') (Var 'B'))
+
+p4 :: Prop
+p4 = Imply (And (Var 'A') (Imply (Var 'A') (Var 'B'))) (Var 'B')
+
+
+type Subst = Assoc Char Bool
+
+
+eval :: Subst -> Prop -> Bool
+eval _ (Const b)   = b
+eval s (Var x)     = find x s
+eval s (Not p)     = not (eval s p)
+eval s (And p q)   = eval s p && eval s q
+eval s (Imply p q) = eval s p <= eval s q
+
+
+vars :: Prop -> [Char]
+vars (Const _)    = []
+vars (Var x)      = [x]
+vars (Not p)      = vars p
+vars (And p q)    = vars p ++ vars q
+vars (Imply p q)  = vars p ++ vars q
+
+type Bit = Int
+
+int2bin :: Int -> [Bit]
+int2bin 0 = []
+int2bin n = n `mod` 2 : int2bin (n `div` 2)
+
+bools :: Int -> [[Bool]]
+bools n = map (reverse . map conv . make n . int2bin) range
+          where
+            range     = [0..(2^n)-1]
+            make n bs = take n (bs ++ repeat 0)
+            conv 0    = False
+            conv 1    = True
+
+
+
+bools' :: Int -> [[Bool]]
+bools' 0 = [[]]
+bools' n = map (False:) bss ++ map (True:) bss
+               where bss = bools' (n-1)
+
+rmdups :: Eq a => [a] -> [a]
+rmdups []     = [] 
+rmdups (x:xs) = x : filter (/= x) (rmdups xs)
+
+substs :: Prop -> [Subst]
+substs p = map (zip vs) (bools (length vs))
+              where vs = rmdups (vars p)
+
+
+isTaut :: Prop -> Bool
+isTaut p = and [eval s p | s <- substs p]
+
+
+------------------ 8.7 Abstract machine ------------------
+
+data Expr = Val Int | Add Expr Expr deriving Show
+
+value :: Expr -> Int
+value (Val n)   = n
+value (Add x y) = value x + value y
+
+
+type Cont = [Op]
+
+data Op = EVAL Expr | ADD Int deriving Show
+
+
+eval' :: Expr -> Cont -> Int
+eval' (Val n) c   = exec c n
+eval' (Add x y) c = eval' x (EVAL y : c)
+
+exec :: Cont -> Int -> Int
+exec []           n = n
+exec (EVAL y : c) n = eval' y (ADD n : c)
+exec (ADD n : c)  m = exec c (n+m)
+
+value' :: Expr -> Int
+value' e = eval' e []
+
+
+{-
+value' (Add (Add (Val 2) (Val 3)) (Val 4))
+= eval' (Add (Add (Val 2) (Val 3)) (Val 4)) []
+= eval' (Add (Val 2) (Val 3)) [EVAL (Val 4)]
+= eval' (Val 2) [EVAL (Val 3), EVAL (Val 4)]
+= exec [EVAL (Val 3), EVAL (Val 4)] 2
+= eval' (Val 3) [(ADD 2), EVAL (Val 4)]
+= exec [(ADD 2), EVAL (Val 4)] 3
+= exec [EVAL (Val 4)] 2+3
+= exec [EVAL (Val 4)] 5
+= eval' (Val 4) [ADD 5]
+= exec [ADD 5] 4
+= exec [] 5+4
+= exec [] 9
+= 9
+-}
+
+
 
 
 

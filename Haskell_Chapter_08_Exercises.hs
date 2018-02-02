@@ -169,9 +169,7 @@ in an expression by the function f, and each Add constructor by the function g.
 -}
 
 
-data Expr = Val Int | Add Expr Expr | Multiply Expr Expr deriving Show
-
-
+data Expr = Val Int | Add Expr Expr | Mult Expr Expr deriving Show
 
 value :: Expr -> Int
 value (Val n)   = n
@@ -180,7 +178,7 @@ value (Add x y) = value x + value y
 
 type Cont = [Op]
 
-data Op = EVAL Expr | ADD Int | MULTIPLY Expr deriving Show
+data Op = EVAL Expr | ADD Int | MULT Int | EVALM Expr deriving Show
 
 
 eval' :: Expr -> Cont -> Int
@@ -229,14 +227,18 @@ instance Eq a => Eq [a] where
 
 Since I am unsure as to if I can get this to work in terminal, I will leave my answer in the comments
 
+data Maybe a = Nothing | Just a 
+
 instance Eq a => Eq (Maybe a) where
-
-
+  Nothing  == Nothing  = True
+  (Just a) == (Just b) = a == b
+  _        == _        = False
 
 
 instance Eq a => Eq [a] where 
-
-
+[]     == []     = True
+(x:xs) == (y:ys) = (x == y) && (xs == ys)
+_      == _      = False      
 
 -}
 
@@ -354,26 +356,34 @@ True
 
 I added Multiply on the top data type and in Op
 
-data Expr = Val Int | Add Expr Expr | Multiply Expr Expr deriving Show
+data Expr = Val Int | Add Expr Expr | Mult Expr Expr deriving Show
 
-data Op = EVAL Expr | ADD Int | MULTIPLY Expr deriving Show
+data Op = EVAL Expr | ADD Int | MULT Expr | EVALM Expr deriving Show
 
 
 
 -}
+-- Listed Earlier
+-- data Expr = Val Int | Add Expr Expr | Mult Expr Expr deriving Show
 
-value' :: Expr -> Int
-value' (Val n)   = n
-value' (Add x y) = value x + value y
+
+-- Listed Earlier
+-- data Op = EVAL Expr | ADD Int | MULT Int | EVALM Expr deriving Show
+
+value'' :: Expr -> Int
+value'' e = eval''' e []
 
 eval''' :: Expr -> Cont -> Int
-eval'''' (Val n) c   = exec c n
-eval''' (Add x y) c = eval''' x (EVAL y : c)
+eval''' (Val n) c        = exec' c n
+eval''' (Add x y) c      = eval''' x (EVAL y : c)
+eval''' (Mult x y) c     = eval''' x (EVALM y : c)
 
-exec :: Cont -> Int -> Int
-exec []           n = n
-exec (EVAL y : c) n = eval''' y (ADD n : c)
-exec (ADD n : c)  m = exec c (n+m)
+exec' :: Cont -> Int -> Int
+exec' [] n                 = n
+exec' (EVAL y : c) n       = eval''' y (ADD n : c)
+exec' (EVALM y : c) n      = eval''' y (MULT n : c)
+exec' (ADD n : c) m        = exec' c (n+m)
+exec' (MULT n : c) m       = exec' c (n*m)
 
 
 

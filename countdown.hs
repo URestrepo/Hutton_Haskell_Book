@@ -39,6 +39,11 @@ instance Show Op where
 -- valid Mul _ _ = True
 -- valid Div x y = x `mod` y == 0
 
+valid :: Op -> Int -> Int -> Bool
+valid Add x y = x <= y
+valid Sub x y = x > y
+valid Mul x y = x /= 1 && y /= 1 && x <= y
+valid Div x y = y /= 1 && x `mod` y == 0 
 
 apply :: Op -> Int -> Int -> Int
 apply Add x y = x + y
@@ -194,7 +199,6 @@ solutions :: [Int] -> Int -> [Expr]
 solutions ns n =
       [e | ns' <- choices ns, e <- exprs ns', eval e == [n]]
 
-
 ------------------ Combining Generation and Evaluation ------------------
 
 -- "solutions" generates many combinations that will fail "valid" function
@@ -221,29 +225,21 @@ combine' (l,x) (r,y) = [(App o l r, apply o x y) | o <- ops, valid o x y]
 solutions' :: [Int] -> Int -> [Expr]
 solutions' ns  n = [e | ns' <- choices ns, (e,m) <- results ns', m == n]
 
+-- main = print $ solutions' [1,3,7,10,25,50] 952
 
-
-
------------------- Exploiting Algebraic Properties ------------------
-
-{-
-We can exploit a few things
-
-1. addition is associative
-2. dividing any number by 1 is the number (Identity property)
+main :: IO ()
+main = print $ solutions' [1,3,7,10,25,50] 765
 
 
 
 
 
--}
 
 
-valid :: Op -> Int -> Int -> Bool
-valid Add x y = x <= y
-valid Sub x y = x > y
-valid Mul x y = x /= 1 && y /= 1 && x <= y
-valid Div x y = y /= 1 && x `mod` y == 0 
+
+
+
+
 
 
 

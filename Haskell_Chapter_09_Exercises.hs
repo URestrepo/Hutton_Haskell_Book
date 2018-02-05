@@ -297,7 +297,7 @@ valid Div x y = y /= 0 && x `mod` y == 0
 
 a. allow the use of exponentiation in expressions;
 
-exprs [1,2]
+> exprs [1,2]
 [1+2,1-2,1*2,1/2,1^2]
 
 -}
@@ -346,7 +346,7 @@ all_sol_diff ns n = [(e, abs(m-n)) | ns' <- choices ns, (e,m) <- results ns']
 
 {-
 > all_sol_diff [1,2] 2
-[(2,0),(1,1),(1+2,1),(1^2,1),(2-1,1),(2^1,0)]
+[(2,0),(1,1),(1+2,1),(2-1,1),(2/1,0)]
 
 
 The above function will output a tuple of the expression and the difference between the answer the
@@ -396,7 +396,9 @@ low_diff_sol_sort $ all_sol_diff [1,2,50] 90
 {-
 c. order the solutions using a suitable measure of simplicity.
 
-For this I will implement a solution that creates 
+For this I will implement a solution that creates a new function that calculates relative difficulty of a type of calculation.
+This function will be based ans is similar to the apply function
+and then create function that orders the a list by relative complexity
 -}
 
 exprCmplxty :: Expr -> Int
@@ -421,24 +423,18 @@ orderSolnsByCmplxty' ns n = (map fst) $
 > orderSolnsByCmplxty' [1,2,50] 90
 [2*(50-1)]
 
--}
-
-{-
-[2,4-2,4/2,2^1,2^(1^4),(4^1)-2,(4^1)/2,4-(2^1),4/(2^1),(4-2)^1,(4/2)^1]
-
-
-
-[1+(2+50),(1+2)+50,2*50,2*(50-1),(2*50)-1,1+(2*50),2*(1+50),(2/1)*50,2*(50/1),(2*50)/1]
-[1+(2+50),(1+2)+50,2*50,2*(50-1),(2*50)-1,1+(2*50),2*(1+50),(2/1)*50,2*(50/1),(2*50)/1]
-
-
-
-[(25-10)*(1+50),(25-(3+7))*(1+50),((25-3)-7)*(1+50),((25-7)-3)*(1+50),((3-1)+7)*(10+(25+50)),((3-1)+7)*((10+25)+50),(3+(7-1))*(10+(25+50)),(3+(7-1))*((10+25)+50),((3+7)-1)*(10+(25+50)),3*((7*(50-10))-25)]
-[(25-10)*(1+50),(25-(3+7))*(1+50),((25-3)-7)*(1+50),((25-7)-3)*(1+50),((3-1)+7)*(10+(25+50)),((3-1)+7)*((10+25)+50),(3+(7-1))*(10+(25+50)),(3+(7-1))*((10+25)+50),((3+7)-1)*(10+(25+50)),3*((7*(50-10))-25)]
+> orderSolnsByCmplxty' [1,2,50] 50
+[50,50/1,50/(2-1)]
 
 -}
 
 {-
+
+-}
+
+{-
+Scratch Notes and Questions
+
 Things to ask/tell C
 - 1 tell that I could not get the right answer because valid function included the optimizations that
 Hutton had, which excluded the ones that were counted

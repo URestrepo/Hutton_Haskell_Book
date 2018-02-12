@@ -203,9 +203,28 @@ sequence (replicate 5 (getDigit ""))
 the same way as getLine, except that it also permits the delete key to be used to remove characters. 
 Hint: the delete character is ’\DEL’, and the control character for moving the cursor back one space is ’\b’.
 
+Probably need to create helper function so that function is recursive so that 
+one can use the list that has already been entered
 
+Also, a remove function seems necessary to take care of the init exceptions of say en empty list
+-}
+
+
+{-
+getChar vs GetCh
+
+> getChar
+a'a'
+> getCh
+'a'
 
 -}
+getCh :: IO Char
+getCh = do hSetEcho stdin False
+           x <- getChar
+           hSetEcho stdin True
+           return x
+
 getLine' :: IO String
 getLine' = do x <- getChar
               if x == '\n' then
@@ -214,17 +233,36 @@ getLine' = do x <- getChar
                   do xs <- getLine'
                      return (x:xs)
 
+
+-- recursive function to does 1 of 3 things
+-- if hit enter, add put newline in terminal and add string so far added, end recursion
+-- if hit delete, go back, put space, and go back again.
+-- if not above actions, add character to list
+getLineHelp :: String -> IO String
+getLineHelp xs = do x <- getCh
+                    if x == '\n' then
+                       do putChar x
+                          return xs
+                    else if x == '\DEL' then
+                            do putChar '\b'
+                               putChar ' '
+                               putChar '\b'
+                               getLineHelp (removeChar xs)
+                    else
+                            do putChar x
+                               getLineHelp (xs ++ [x])
+
+-- Function to start getLine'' without need to enter empty list
 getLine'' :: IO String
-getLine'' = do x <- getChar
-               if x == '\n' then
-                return []
-                else
-                   do xs <- getLine'
-                      return (x:xs)
+getLine'' = getLineHelp []
+
 
 
 removeChar :: [Char] -> [Char]
+removeChar [] = []
 removeChar xs = init xs
+
+
 
 {-
 > removeChar "brainy"

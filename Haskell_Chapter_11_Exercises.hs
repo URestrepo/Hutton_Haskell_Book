@@ -188,31 +188,13 @@ sequence (replicate 5 (getDigit ""))
 -}
 
 
-adder_helper' :: Int -> IO [Int]
-adder_helper' a = sequence (replicate a (getDigit ""))
+-- 
 
-adder' :: IO ()
-adder' = do n <- getDigit "How many numbers?: "
-            if n < 1 then
-               do putStrLn "ERROR: there must be more than 0 numbers!"
-                  adder'
-            else
-               do nums <- adder_helper' n
-                  putStr "the total is "
-                  putStrLn (show $ sum nums) -- convert Int to String with show
+-- adder' :: IO ()
+-- adder' = do num <- getDigit "How many numbers? "
+            -- putStr "The total is "
+            -- putStr (show (sum (sequence (replicate num (getDigit "")))))
 
-
--- adder'' :: IO ()
--- adder'' = do num <- getDigit "How many numbers? "
---              putStr "The total is "
---              putStr ( show $ sum (sequence (replicate num (getDigit "")))
-
-adder'' :: IO ()
-adder'' = do num <- getDigit "How many numbers? "
-             nums <- sequence (replicate num (getDigit ""))
-             putStr "The total is "
-             putStrLn (show $ sum nums)
-             -- where  = [1,2,3,4,5]
 
 
 
@@ -307,8 +289,7 @@ When is the return function useful in your opinion
 
 
 
-return' :: a -> IO a 
-return' v = v
+
 
 
 

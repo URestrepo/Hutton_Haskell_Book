@@ -138,6 +138,321 @@ Leaf 3
 
 > fmap even (Node (Leaf 1) (Leaf 2)) 
 Node (Leaf False) (Leaf True)
+
+Many functors in Haskell in a sense use f a as a data structure that contains elements of type a (sometimes called container type)
+and fmap applies function to each such element.
+
+Know that IO is not a container types in normal sense as its values represent input/output actions whose internal structure we 
+do not have access to.
+
+It however can be made into functor
+
+
+********* Note this will not function because it exists in GHC.Base ****************
+instance Functor IO where
+   -- fmap :: (a -> b) IO a -> IO b
+   fmap g mx = do {x <- mx; return (g x)}
+
+
+
+> fmap show (return True) 
+"True"
+
+Note that fmap can be used for structure with elements that are factorial.
+Allowing people to use the same name for functions rather than creating a new instance.
+
+Note we can defin generic functions that can be used with any functor.
+
+Example inc, can be used to generalize any functorial type
+-}
+inc'' :: Functor f => f Int -> f Int
+inc'' = fmap (+1)
+
+
+{-
+> inc'' (Just 1) 
+Just 2
+
+> inc'' [1,2,3,4,5] 
+[2,3,4,5,6]
+
+> inc'' (Node (Leaf 1) (Leaf 2)) 
+Node (Leaf 2) (Leaf 3)
+-}
+
+
+------------------ Functor Laws ------------------
+
+
+{-
+
+To create functors, there are two laws that must be satisfied
+
+fmap id      = id
+fmap (g . h) = fmap g . fmap h
+
+
+1. fmap requires to preserve identity function.
+
+2. second equation states fmap preserves function composition.
+
+Meaning if one were to reverse a list for example,  it would not satify second law.
+
+
+
+
+-}
+
+{-
+This does not work as it requires one to declare their own list type
+Will fix in future
+
+instance Functor [] where 
+-- fmap :: (a -> b) -> f a -> f b
+   fmap g [] = [] 
+   fmap g (x:xs) = fmap g xs ++ [g x]
+
+> fmap id [1,2]
+[2,1]
+
+> id [1,2] 
+[1,2]
+
+> fmap (not . even) [1,2] 
+[False,True]
+
+> (fmap not . fmap even) [1,2] 
+[True,False]
+
+-}
+------------------ Applicatives ------------------
+
+{-
+Suppose one wished to allow functions with any number of of arguments to be mapped, rather than restricted to single argument
+
+
+fmap0 :: a -> f a 
+fmap1 :: (a -> b) -> f a -> f b 
+fmap2 :: (a -> b -> c) -> f a -> f b -> f c 
+fmap3 :: (a -> b -> c -> d) -> f a -> f b -> f c -> f d .
+.
+.
+
+pure :: a -> f a
+
+(<*>) :: f (a -> b) -> f a -> f b
+
+
+pure converts a value into a structure of type f a.
+<*>
+
+
+**********something something add later***********
+
+use of pure and <*>
+
+pure g <*> x1 <*> x2 <*> ... <*> xn
+
+the above represents applicative style.
+
+g is a curried function that takes n arguments of type a1 .. an and produces type b
+
+-}
+-- class Functor f => Applicative f where
+--    pure :: a -> f a
+--    (<*>) :: f (a -> b) -> f a -> f b
+
+{-
+Class of functions that support pure and <*> are called applicative functors or applicatives
+
+
+-}
+-- instance Applicative Maybe where
+--    -- pure :: a -> Maybe a
+--    pure = Just
+--    -- (<*>) :: Maybe (a -> b) -> Maybe a -> Maybe b
+--    Nothing <*> _   = Nothing
+--    (Just g) <*> mx = fmap g mx
+
+{-
+> pure (+1) <*> Just 1
+Just 2
+
+> pure (+) <*> Just 1 <*> Just 2
+Just 3
+
+> pure (+) <*> Nothing <*> Just 2
+Nothing
+
+instance  Applicative [] where
+   -- pure :: a -> [a]
+   pure x = [x]
+
+   -- (<*>) :: [a -> b] -> [a] -> [b]
+   gs <*> xs = [g x | g <- gs, x <- xs]
+
+> pure (+1) <*> [1,2,3] 
+[2,3,4]
+
+> pure (+) <*> [1] <*> [2] 
+[3]
+
+> pure (*) <*> [1,2] <*> [3,4] 
+[3,4,6,8]
+
+-}
+prods :: [Int] -> [Int] -> [Int]
+prods xs ys = [x*y | x <- xs, y <- ys] 
+
+prods' :: [Int] -> [Int] -> [Int]
+prods' xs ys = pure (*) <*> xs <*> ys
+
+
+{-
+instance Applicative IO where 
+   -- pure :: a -> IO a 
+   pure = return
+
+   -- (<*>) :: IO (a -> b) -> IO a -> IO b 
+   mg <*> mx = do {g <- mg; x <- mx; return (g x)}
+
+-}
+getChars :: Int -> IO String 
+getChars 0 = return [] 
+getChars n = pure (:) <*> getChar <*> getChars (n-1)
+
+{-
+from prelude
+
+sequenceA :: Applicative f => [f a] -> f [a]
+sequenceA [] = pure [] 
+sequenceA (x:xs) = pure (:) <*> x <*> sequenceA xs
+
+Applicative Functors 4 laws
+
+pure id <*> x = x
+pure (g x)    = pure g <*> pure x
+x <*> pure y  = pure (\g -> g y) <*> x
+x <*> (y <*> z) = (pure (.) <*> x <*> y) <*> z
+
+-}
+
+------------------ Monads ------------------
+
+data Expr = Val Int | Div Expr Expr
+
+eval' :: Expr -> Int
+eval' (Val n)   = n
+eval' (Div x y) = eval' x `div` eval' y
+
+{-
+> eval' (Div (Val 1) (Val 0)) 
+*** Exception: divide by zero
+
+-}
+
+safediv :: Int -> Int -> Maybe Int
+safediv _ 0 = Nothing
+safediv n m = Just (n `div` m)
+
+
+eval'' :: Expr -> Maybe Int
+eval'' (Val n)   = Just n
+eval'' (Div x y) = case eval'' x of
+          Nothing -> Nothing
+          Just n -> case eval'' y of
+                Nothing -> Nothing
+                Just m  -> safediv n m
+
+{-
+> eval'' (Div (Val 1) (Val 0)) 
+Nothing
+-}
+
+
+
+
+{-
+Note this will not work because 
+safediv is impure
+safediv can be nothing or Just a
+
+eval :: Expr -> Maybe Int
+eval (Val n)   = pure n
+eval (Div x y) = pure safediv <*> eval x <*> eval y 
+
+to fix we use
+
+(>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b 
+mx >>= f = case mx of
+            Nothing -> Nothing 
+            Just x -> f x
+
+>>= is called "bind"
+
+-}
+
+eval ::Expr -> Maybe Int
+eval (Val n)   = Just n
+eval (Div x y) = eval x >>= \n ->
+                 eval y >>= \m ->
+                 safediv n m 
+
+{-
+
+> eval (Div (Val 1) (Val 0)) 
+Nothing
+
+> eval (Div (Val 6) (Val 2))
+Just 3
+
+>>= operator ensures that such an expression only succeeds if every component mi in the sequence succeeds. 
+Moreover, the user does not have to worry about dealing with the possibility of failure at any point in the sequence, 
+as this is handled automatically by the definition of the >>= operator.
+
+-}
+eval''' :: Expr -> Maybe Int 
+eval''' (Val n)   = Just n 
+eval''' (Div x y) = do n <- eval''' x 
+                       m <- eval''' y 
+                       safediv n m
+{-
+class Applicative m => Monad m where 
+   return :: a -> m a 
+   (>>=) :: m a -> (a -> m b) -> m b
+
+   return = pure
+
+monad is an applicative type
+
+instance Monad Maybe where
+   -- (>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b 
+   Nothing >>= _ = Nothing 
+   (Just x) >>= f = f x
+
+instance Monad [] where
+   -- (>>=) :: [a] -> (a -> [b]) -> [b] 
+   xs >>= f = [y | x <- xs, y <- f x]
+
+-}
+pairs :: [a] -> [b] -> [(a,b)]
+pairs xs ys = do x <- xs
+                 y <- ys
+                 return (x,y)
+
+pairs' :: [a] -> [b] -> [(a,b)]
+pairs' xs ys = xs >>= \x ->
+               ys >>= \y ->
+               return (x,y)
+{-
+> pairs [1,2] [3,4]
+[(1,3),(1,4),(2,3),(2,4)]
+
+-}
+pairs'' :: [a] -> [b] -> [(a,b)] 
+pairs'' xs ys = [(x,y) | x <- xs, y <- ys]
+{-
+
 -}
 
 {-

@@ -135,13 +135,18 @@ repeatTree x = Node (repeatTree x) x (repeatTree x)
 
 takeTree :: Int -> Tree a -> Tree a
 takeTree 0 t            = Leaf
-takeTree _ Leaf         = Leaf  
+takeTree _ Leaf         = Leaf
 takeTree n (Node l x r) = Node (takeTree (n-1) l ) x (takeTree (n-1) r )
 
 replicateTree :: Int -> a -> Tree a
 replicateTree n = takeTree n . repeatTree
 
+
+
 {-
+
+
+
 > takeTree 1 (Node (Node (Leaf) 1 (Leaf)) 2 (Node (Leaf) 3 (Leaf)))
 Node Leaf 2 Leaf
 
@@ -149,6 +154,14 @@ Node Leaf 2 Leaf
 Node (Node Leaf 1 Leaf) 2 (Node Leaf 3 Leaf)
 
 
+> replicateTree 0 10
+Leaf
+
+n> replicateTree 1 10
+Node Leaf 10 Leaf
+
+> replicateTree 2 10
+Node (Node Leaf 10 Leaf) 10 (Node Leaf 10 Leaf)
 
 -}
                
@@ -167,7 +180,59 @@ Define a function sqroot :: Double -> Double that implements this procedure.
 Hint: first produce an infinite list of approximations using the library function iterate. 
 For simplicity, take the number 1.0 as the initial approximation, and 0.00001 as the distance value.
 
+> :t iterate
+iterate :: (a -> a) -> a -> [a]
+
+> take 10 (iterate (2*) 1)
+[1,2,4,8,16,32,64,128,256,512]
+
+Under stand that 2* will be curried because it already has one side of multiplication
+
+
 -}
+
+closeTo' :: Double -> Double -> Bool
+closeTo' x y = if abs( x - y) <= 0.00001 then True else False
+
+next :: Double -> Double -> Double
+next n a = (a + n/a) / 2
+
+closeTo :: [Double] -> Double
+closeTo (x:y:xs)  = if abs( x - y ) <= 0.00001 then x else closeTo (y:xs)
+
+
+sqroot :: Double -> Double
+sqroot n = closeTo (iterate (next n) 1)
+
+{-
+
+
+-}
+
+{-
+> closeTo' 5 6
+False
+
+> closeTo' 5.999999999 6
+True
+
+> sqroot 4
+2.0000000929222947
+
+
+Ask C if it would be better to write like he did with the .00001 in the earlier function?
+
+-}
+
+
+
+
+
+
+
+
+
+
 
 
 

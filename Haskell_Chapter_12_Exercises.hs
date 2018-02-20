@@ -131,7 +131,7 @@ instance Applicative ZipList where
 
 data Expr a = Var a | Val Int | Add (Expr a) (Expr a) deriving Show
 
-that contain variables of some type a, show how to make this type into instances of the Functor, Applicative and Monad classes. With the aid of an example, explain what the >>= operator for this type does.
+that contain variables of some type a, show how to make this type into instances of the Functor, Applicative, and Monad classes. With the aid of an example, explain what the >>= operator for this type does.
 
 
 -}

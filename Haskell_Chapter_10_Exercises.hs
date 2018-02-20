@@ -308,7 +308,7 @@ When is the return function useful in your opinion
 
 
 return' :: a -> IO a 
-return' v = v
+return' v = ...
 
 
 

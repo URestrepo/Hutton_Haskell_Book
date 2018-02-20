@@ -297,7 +297,7 @@ valid Div x y = y /= 0 && x `mod` y == 0
 
 a. allow the use of exponentiation in expressions;
 
-> exprs [1,2]
+exprs [1,2]
 [1+2,1-2,1*2,1/2,1^2]
 
 -}

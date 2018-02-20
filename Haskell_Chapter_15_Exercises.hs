@@ -149,16 +149,19 @@ Node Leaf 2 Leaf
 Node (Node Leaf 1 Leaf) 2 (Node Leaf 3 Leaf)
 
 
+
 -}
+               
 
 {-
-6. Newton’s method for computing the square root of a (non-negative) floating-point number n can be expressed as follows:
+6. Newton’s method for computing the square root of a (non-negative) floating-point number n 
+can be expressed as follows:
 
 1. Start with an initial approximation to the result; 
 2. given the current approximation a, 
 the next approximation is defined by the function next a = (a + n/a) / 2; 
-3. repeat the second step until the two most recent approximations are within some desired distance of one another, 
-at which point the most recent value is returned as the result.
+3. repeat the second step until the two most recent approximations are within some desired 
+distance of one another, at which point the most recent value is returned as the result.
 
 Define a function sqroot :: Double -> Double that implements this procedure. 
 Hint: first produce an infinite list of approximations using the library function iterate. 

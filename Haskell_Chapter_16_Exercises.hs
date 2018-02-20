@@ -1,6 +1,15 @@
 -- 16.9 Exercises
 {-
 1. Show that add n (Succ m) = Succ (add n m), by induction on n.
+
+data Nat = Zero | Succ Nat
+
+add :: Nat -> Nat -> Nat
+add Zero m = m
+add (Succ n) m = Succ (add n m)
+
+Base Case
+
 -}
 
 {-

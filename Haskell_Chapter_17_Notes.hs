@@ -1,13 +1,9 @@
 -- Haskell
---Chapter 15
--- Lazy Evaluation
+-- Chapter 17
+-- Calculating Compilers
 
 
 {-
-
-- Equational Reasoning
-- Induction
-- Proving Correctness of Simple Compiler
 
 
 -}

@@ -41,6 +41,8 @@ Second requires 3 steps ( multiply twice and add)
 double :: Int -> Int
 double x = x + x
 
+isZero 0 = True 
+isZero n | n /= 0 = False
 
 {-
 Prefer to write non-overlapping functions
